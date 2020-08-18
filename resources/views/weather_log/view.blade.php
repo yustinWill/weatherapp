@@ -37,7 +37,7 @@
                     <select class="form-control select2" name="location" id="location" name="user_location_id">
                         <option <?php if ($filter["location"] == "ALL") { echo("selected"); } ?> value="ALL">ALL</option>
                         @foreach ($location_data as $data)
-                        <option <?php if ($filter["location"] == $data["location_id"]) { echo("selected"); } ?> value="<?php echo $data["location_id"] ?>">{{ $data["location_name"] }}</option>
+                        <option <?php if ($filter["location"] == $data["location_id"]) { echo("selected"); } ?> value="<?php echo $data["location_id"] ?>">{{ $data["location_id"] }} - {{ $data["location_name"] }}</option>
                         @endforeach
                     </select>
                 </div>

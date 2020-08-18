@@ -7,6 +7,7 @@
 @endpush
 
 @push('scripts')
+<script src="{{ asset('custom/js/master_user/view/date.js') }}"></script>
 <script src="{{ asset('custom/js/master_user/view/datatable.js') }}"></script>
 <script src="{{ asset('custom/js/master_user/view/delete_ajax.js') }}"></script>
 <script src="{{ asset('custom/js/master_user/view/select2.js') }}"></script>
@@ -79,7 +80,7 @@
                 <tr>
                     <td>{{ $data["user_name"] }}</td>
                     <td>{{ $data["user_email"] }}</td>
-                    <td>{{ $data["user_registration_timestamp"] }}</td>
+                    <td>{{ $data["user_created_time"] }}</td>
                     <td>
                     @foreach ($location_data as $loc_data)
                     <?php if ($loc_data["location_id"] == $data["user_location_id"]) {?>

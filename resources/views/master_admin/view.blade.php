@@ -7,6 +7,7 @@
 @endpush
 
 @push('scripts')
+<script src="{{ asset('custom/js/master_admin/view/date.js') }}"></script>
 <script src="{{ asset('custom/js/master_admin/view/datatable.js') }}"></script>
 <script src="{{ asset('custom/js/master_admin/view/delete_ajax.js') }}"></script>
 <script src="{{ asset('custom/js/master_admin/view/select2.js') }}"></script>

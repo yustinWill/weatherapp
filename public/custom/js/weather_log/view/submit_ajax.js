@@ -5,7 +5,7 @@ $(document).ready(function () {
         var curr_this = $(this);
         Swal.fire({
             title: "Apakah Anda Yakin?",
-            text: "Tindakan Anda akan menambah Weather Log sesuai dengan semua lokasi terdaftar yang aktif",
+            text: "Tindakan Anda akan menambah Weather Log sesuai dengan jumlah lokasi terdaftar yang aktif lalu mengirimkan notifikasi ke semua user yang terdaftar",
             icon: "warning",
             showCancelButton: true,
             confirmButtonColor: '#D94148',
@@ -22,7 +22,7 @@ $(document).ready(function () {
                     success: function (data) {
                         Swal.fire({
                             title: 'Success!',
-                            text: "Data berhasil disimpan",
+                            text: "Weather Log berhasil dibuat dan dikirim",
                             icon: 'success',
                             confirmButtonColor: '#D94148',
                         }).then(function(result) {

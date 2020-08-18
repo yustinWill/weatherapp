@@ -65,7 +65,6 @@ class ViewController extends Controller
             "multiple_rows" => true,
         ]);
 
-
         return view('master_user/view', [
             'user_data' => $user_data,
             'location_data' => $location_data,

@@ -96,15 +96,13 @@ class AddController extends Controller
             if($weather_result["status_code"] == 200){
                 $weather_result_data = $weather_result["data"];
         
-                $encoded_detail_current = json_encode($weather_result_data["current"]);
-                $encoded_detail_daily = json_encode($weather_result_data["daily"]);
                 $decoded_detail_current = $weather_result_data["current"];
                 $decoded_detail_daily = $weather_result_data["daily"];
         
                 $date_current = date("Y-m-d H:i:s",$decoded_detail_current["dt"] + $weather_result_data["timezone_offset"]);
                 $weather_current = $decoded_detail_current["weather"][0]["id"];
                 $temparature_current = $decoded_detail_current["temp"];
-                $heavy_rain_current = false;
+                $is_heavy_rain_current = false;
         
                 if ($weather_current > 800) {
                     // Cloudy
@@ -117,22 +115,22 @@ class AddController extends Controller
                 }
                 elseif ($weather_current >= 500) {
                     // Rain
-                    if($weather_current != 500) $heavy_rain_current = true;
+                    if($weather_current != 500) $is_heavy_rain_current = true;
                 }
                 elseif ($weather_current >= 300) {
                     // Drizzle
-                    if($weather_current != 300) $heavy_rain_current = true;
+                    if($weather_current != 300) $is_heavy_rain_current = true;
                 }
                 else {
                     // Thunderstorm
-                    $heavy_rain_current = true;
+                    $is_heavy_rain_current = true;
                 }
                 
                 $daily_data = [];
         
                 foreach ($decoded_detail_daily as $item) {
                     $weather_current_daily = $item["weather"][0]["id"];
-                    $heavy_rain_daily = false;
+                    $is_heavy_rain = false;
                     if ($weather_current_daily > 800) {
                         // Cloudy
                     }
@@ -144,22 +142,33 @@ class AddController extends Controller
                     }
                     elseif ($weather_current_daily >= 500) {
                         // Rain
-                        if($weather_current_daily != 500) $heavy_rain_daily = true;
+                        if($weather_current_daily != 500) $is_heavy_rain = true;
                     }
                     elseif ($weather_current_daily >= 300) {
                         // Drizzle
-                        if($weather_current_daily != 300) $heavy_rain_daily = true;
+                        if($weather_current_daily != 300) $is_heavy_rain = true;
                     }
                     else {
                         // Thunderstorm
-                        $heavy_rain_daily = true;
+                        $is_heavy_rain = true;
                     }
         
                     array_push($daily_data, [
-                        "date" => date("Y-m-d",$item["dt"] + $weather_result_data["timezone_offset"]),
-                        "heavy_rain_daily" => $heavy_rain_daily
+                        "date" => date("Y-m-d H:m:s",$item["dt"] + $weather_result_data["timezone_offset"]),
+                        "weather_today_code" => $weather_current_daily,
+                        "is_heavy_rain" => $is_heavy_rain,
+                        "temp_min" => $item["temp"]["min"],
+                        "temp_max" => $item["temp"]["max"]
                     ]);
                 }
+
+                $encoded_detail_current = json_encode([
+                    "date" => date("Y-m-d H:m:s",$decoded_detail_current["dt"] + $weather_result_data["timezone_offset"]),
+                    "weather_today_code" => $weather_current,
+                    "is_heavy_rain_current" => $is_heavy_rain_current,
+                    "temp" => $decoded_detail_current["temp"]
+                ]);
+                $encoded_detail_daily = json_encode($daily_data);
                 
                 return view('weather_log/add', [
                     'location_data' => $location_data,
@@ -169,7 +178,7 @@ class AddController extends Controller
                     'encoded_detail_daily' => $encoded_detail_daily,
                     'date_current' => $date_current,
                     'temparature_current' => $temparature_current,
-                    'heavy_rain_current' => $heavy_rain_current,
+                    'is_heavy_rain_current' => $is_heavy_rain_current,
                     'daily_data' => $daily_data
                 ]);
             }
@@ -183,7 +192,7 @@ class AddController extends Controller
             'encoded_detail_daily' => null,
             'date_current' => null,
             'temparature_current' => null,
-            'heavy_rain_current' => null,
+            'is_heavy_rain_current' => null,
             'daily_data' => null
         ]);
     }

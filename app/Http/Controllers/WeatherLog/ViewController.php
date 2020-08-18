@@ -4,7 +4,7 @@ namespace App\Http\Controllers\WeatherLog;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
-use Mail;
+use Illuminate\Support\Facades\Mail;
 
 class ViewController extends Controller
 {
@@ -105,65 +105,12 @@ class ViewController extends Controller
             $decoded_detail_current = json_decode($detail_data["weather_log_current"], true);
             $decoded_detail_daily = json_decode($detail_data["weather_log_next_week"], true);
 
-            $date_current = date("Y-m-d H:i:s",$decoded_detail_current["dt"]);
-            $weather_current = $decoded_detail_current["weather"][0]["id"];
+            $date_current = $decoded_detail_current["date"];
+            $weather_current = $decoded_detail_current["weather_today_code"];
             $temparature_current = $decoded_detail_current["temp"];
-            $heavy_rain_current = false;
-
-            if ($weather_current > 800) {
-                // Cloudy
-            }
-            elseif ($weather_current == 800) {
-                // Clear
-            }
-            elseif ($weather_current >= 700) {
-                // Atmosphere
-            }
-            elseif ($weather_current >= 500) {
-                // Rain
-                if($weather_current != 500) $heavy_rain_current = true;
-            }
-            elseif ($weather_current >= 300) {
-                // Drizzle
-                if($weather_current != 300) $heavy_rain_current = true;
-            }
-            else {
-                // Thunderstorm
-                $heavy_rain_current = true;
-            }
+            $heavy_rain_current = $decoded_detail_current["is_heavy_rain_current"];
             
             $daily_data = [];
-
-            foreach ($decoded_detail_daily as $item) {
-                $weather_current_daily = $item["weather"][0]["id"];
-                $heavy_rain_daily = false;
-                if ($weather_current_daily > 800) {
-                    // Cloudy
-                }
-                elseif ($weather_current_daily == 800) {
-                    // Clear
-                }
-                elseif ($weather_current_daily >= 700) {
-                    // Atmosphere
-                }
-                elseif ($weather_current_daily >= 500) {
-                    // Rain
-                    if($weather_current_daily != 500) $heavy_rain_daily = true;
-                }
-                elseif ($weather_current_daily >= 300) {
-                    // Drizzle
-                    if($weather_current_daily != 300) $heavy_rain_daily = true;
-                }
-                else {
-                    // Thunderstorm
-                    $heavy_rain_daily = true;
-                }
-
-                array_push($daily_data, [
-                    "date" => date("Y-m-d",$item["dt"]),
-                    "heavy_rain_daily" => $heavy_rain_daily
-                ]);
-            }
 
             return view('weather_log/detail', [
                 'detail_data' => $detail_data,
@@ -171,7 +118,7 @@ class ViewController extends Controller
                 'date_current' => $date_current,
                 'temparature_current' => $temparature_current,
                 'heavy_rain_current' => $heavy_rain_current,
-                'daily_data' => $daily_data
+                'daily_data' => $decoded_detail_daily
             ]);
         }
     }
@@ -266,9 +213,75 @@ class ViewController extends Controller
             $weather_result = curl_get($weather_link, $weather_data);
 
             $weather_result_data = $weather_result["data"];
+            $weather_current = $weather_result_data["current"]["weather"][0]["id"];
 
-            $encoded_detail_current = json_encode($weather_result_data["current"]);
-            $encoded_detail_daily = json_encode($weather_result_data["daily"]);
+            $is_heavy_rain_current = false;
+        
+            if ($weather_current > 800) {
+                // Cloudy
+            }
+            elseif ($weather_current == 800) {
+                // Clear
+            }
+            elseif ($weather_current >= 700) {
+                // Atmosphere
+            }
+            elseif ($weather_current >= 500) {
+                // Rain
+                if($weather_current != 500) $is_heavy_rain_current = true;
+            }
+            elseif ($weather_current >= 300) {
+                // Drizzle
+                if($weather_current != 300) $is_heavy_rain_current = true;
+            }
+            else {
+                // Thunderstorm
+                $is_heavy_rain_current = true;
+            }
+
+            $daily_data = [];
+        
+            foreach ($weather_result_data["daily"] as $item) {
+                $weather_current_daily = $item["weather"][0]["id"];
+                $is_heavy_rain = false;
+                if ($weather_current_daily > 800) {
+                    // Cloudy
+                }
+                elseif ($weather_current_daily == 800) {
+                    // Clear
+                }
+                elseif ($weather_current_daily >= 700) {
+                    // Atmosphere
+                }
+                elseif ($weather_current_daily >= 500) {
+                    // Rain
+                    if($weather_current_daily != 500) $is_heavy_rain = true;
+                }
+                elseif ($weather_current_daily >= 300) {
+                    // Drizzle
+                    if($weather_current_daily != 300) $is_heavy_rain = true;
+                }
+                else {
+                    // Thunderstorm
+                    $is_heavy_rain = true;
+                }
+    
+                array_push($daily_data, [
+                    "date" => date("Y-m-d",$item["dt"] + $weather_result_data["timezone_offset"]),
+                    "weather_today_code" => $weather_current_daily,
+                    "is_heavy_rain" => $is_heavy_rain,
+                    "temp_min" => $item["temp"]["min"],
+                    "temp_max" => $item["temp"]["max"]
+                ]);
+            }
+
+            $encoded_detail_current = json_encode([
+                "date" => date("Y-m-d H:m:s",$weather_result_data["current"]["dt"] + $weather_result_data["timezone_offset"]),
+                "weather_today_code" => $weather_current,
+                "is_heavy_rain_current" => $is_heavy_rain_current,
+                "temp" => $weather_result_data["current"]["temp"]
+            ]);
+            $encoded_detail_daily = json_encode($daily_data);
             
             $insert_res = std_insert_get_id([
                 "table_name" => "t_weather_logs",
@@ -286,48 +299,28 @@ class ViewController extends Controller
                 ]
             ]);
 
-            $heavy_rain_tommorow = false;
+            $heavy_rain_tommorow = $daily_data[1]["is_heavy_rain"];
 
-            $weather_current_daily = $weather_result_data["daily"]["weather"][0]["id"];
-            if ($weather_current_daily > 800) {
-                // Cloudy
-            }
-            elseif ($weather_current_daily == 800) {
-                // Clear
-            }
-            elseif ($weather_current_daily >= 700) {
-                // Atmosphere
-            }
-            elseif ($weather_current_daily >= 500) {
-                // Rain
-                if($weather_current_daily != 500) $heavy_rain_tommorow = true;
-            }
-            elseif ($weather_current_daily >= 300) {
-                // Drizzle
-                if($weather_current_daily != 300) $heavy_rain_tommorow = true;
-            }
-            else {
-                // Thunderstorm
-                $heavy_rain_tommorow = true;
-            }
+            // if($heavy_rain_tommorow){
+                foreach ($user_data as $usr_data) {
+                    // BEGIN::SEND EMAIL FOR WEATHER NOTIFICATION
+                        //LARAVEL send mail sample
+                        $to_name = $usr_data["user_name"];
+                        $to_email = $usr_data["user_email"];
+                        $data = array(
+                            "name"=> $usr_data["user_name"],
+                            "location_name"=> $loc_data["location_name"],
+                        );
+                        Mail::send("notification_email.sendmail", $data, function($message) use ($to_name, $to_email, $loc_data) {
+                            $message
+                            ->to($to_email, $to_name)
+                            ->subject("Tommorow will be heavy rain at " . $loc_data["location_name"]);
+                            $message->from("vovoba1041@acceptmail.net", "Rain Notification");
+                        });
+                    // END::SEND EMAIL FOR WEATHER NOTIFICATION
+                }
+            // }
 
-            foreach ($user_data as $usr_data) {
-                // BEGIN::SEND EMAIL FOR FORGOT PASSWORD
-                    //LARAVEL send mail sample
-                    $to_name = $usr_data["user_name"];
-                    $to_email = $usr_data["user_email"];
-                    $data = array(
-                        "name"=> $usr_data["user_name"],
-                        "body" => $heavy_rain_tommorow
-                    );
-                    Mail::send("authentication.sendmail", $data, function($message) use ($to_name, $to_email) {
-                        $message
-                        ->to($to_email, $to_name)
-                        ->subject("Ubah Kata Sandi Revolusi Mental");
-                        $message->from("testmailjoes@gmail.com", "Ubah Kata Sandi - Revolusi Mental");
-                    });
-                // END::SEND EMAIL FOR FORGOT PASSWORD
-            }
         }
 
         return response()->json([

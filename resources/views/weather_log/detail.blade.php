@@ -59,6 +59,7 @@
                                     <tr>
                                         <th scope="col">#</th>
                                         <th scope="col">Tanggal</th>
+                                        <th scope="col">Suhu ( &#8451 )</th>
                                         <th scope="col">Hujan Lebat</th>
                                     </tr>
                                 </thead>
@@ -68,9 +69,10 @@
                                     <tr>
                                         <th scope="row">{{ $daily_number }}</th>
                                         <td>{{ $daily["date"] }}</td>
+                                        <td>{{ $daily["temp_min"] }} - {{ $daily["temp_max"] }}</td>
                                         <td>
-                                            <span class="label label-inline <?php if ($daily["heavy_rain_daily"]) echo "label-light-danger"; else echo "label-light-success"; ?> font-weight-bold">
-                                                <?php if ($daily["heavy_rain_daily"]) echo "Ya"; else echo "Tidak"; ?>
+                                            <span class="label label-inline <?php if ($daily["is_heavy_rain"]) echo "label-light-danger"; else echo "label-light-success"; ?> font-weight-bold">
+                                                <?php if ($daily["is_heavy_rain"]) echo "Ya"; else echo "Tidak"; ?>
                                             </span>
                                         </td>
                                     </tr>
