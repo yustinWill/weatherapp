@@ -13,6 +13,7 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
+
 //Routes without session checking
 Route::get('/', 'FrontEnd\HomePageController@index')->name('home_page');
 Route::post('/subscribe', 'FrontEnd\HomePageController@subscribe')->name('home_page_subscribe');
